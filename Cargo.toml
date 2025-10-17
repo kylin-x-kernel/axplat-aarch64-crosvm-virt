@@ -1,0 +1,37 @@
+[package]
+name = "axplat-aarch64-crosvm-virt"
+version = "0.2.0"
+description = "Implementation of `axplat` hardware abstraction layer for CROSVM ARM64 virtual machine."
+documentation = "https://docs.rs/axplat-aarch64-crosvm-virt"
+keywords = ["arceos", "os", "hal", "embedded", "aarch64"]
+categories = ["embedded", "no-std", "hardware-support", "os"]
+edition = 2024
+authors = ["WeiKang Guo <guoweikang.kernel@gmail.com"]
+license = "GPL-3.0-or-later OR Apache-2.0 OR MulanPSL-2.0"
+homepage = "https://github.com/kylin-x-kernel/axplat-aarch64-crosvm-virt.git"
+repository = "https://github.com/kylin-x-kernel/axplat-aarch64-crosvm-virt.git"
+
+[features]
+fp-simd = ["axcpu/fp-simd"]
+irq = ["axplat/irq"]
+rtc = []
+smp = ["axplat/smp"]
+
+[dependencies]
+log = "0.4"
+page_table_entry = "0.5"
+axconfig-macros = "0.2"
+kspin = "0.1"
+page_table_entry = "0.5"
+dw_apb_uart = "0.1"
+log = "0.4"
+axcpu = "0.2"
+axplat = "0.2.0"
+axplat-aarch64-peripherals = "0.2.0"
+aarch64-cpu = "10.0"
+
+[patch.crates-io]
+axplat = { git = "https://github.com/kylin-x-kernel/axplat_crates.git", branch = "main" }
+
+[package.metadata.docs.rs]
+targets = ["aarch64-unknown-none"]
