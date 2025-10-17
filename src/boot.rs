@@ -28,6 +28,13 @@ unsafe fn init_boot_page_table() {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
             true,
         );
+
+        // 0x0000_8000_0000..0x0000_C000_0000, 1G block, normal memory_set
+        BOOT_PT_L1[2] = A64PTE::new_page(
+            pa!(0x8000_0000),
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+            true,
+        );
     }
 }
 
@@ -58,7 +65,7 @@ unsafe extern "C" fn _start() -> ! {
         add     x13, x18, #0x16     // 'MZ' magic
         b       {entry}             // Branch to kernel start, magic
 
-        .quad   0                   // Image load offset from start of RAM, little-endian
+        .quad   0x280000                   // Image load offset from start of RAM, little-endian
         .quad   _ekernel - _start   // Effective size of kernel image, little-endian
         .quad   {flags}             // Kernel flags, little-endian
         .quad   0                   // reserved
@@ -84,6 +91,7 @@ unsafe extern "C" fn _start_primary() -> ! {
         adrp    x8, {boot_stack}        // setup boot stack
         add     x8, x8, {boot_stack_size}
         mov     sp, x8
+
 
         bl      {switch_to_el1}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon

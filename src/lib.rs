@@ -23,7 +23,7 @@ pub mod config {
     );
 }
 
-axplat_aarch64_peripherals::console_if_impl!(ConsoleIfImpl);
+axplat_aarch64_peripherals::ns16550_console_if_impl!(ConsoleIfImpl);
 axplat_aarch64_peripherals::time_if_impl!(TimeIfImpl);
 
 #[cfg(feature = "irq")]
