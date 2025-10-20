@@ -7,6 +7,8 @@ use axplat::mem::{pa, phys_to_virt};
 
 struct InitIfImpl;
 
+use fdtree_rs::LinuxFdt;
+
 #[unsafe(no_mangle)]
 pub extern "C" fn _boot_print_usize(num: usize) {
     let mut msg: [u8; 16] = [0; 16];
@@ -65,7 +67,7 @@ impl Uart {
 	}
 }
 
-static BOOT_SERIAL: Uart = Uart::new(0xffff_0000_0000_03f8);
+static BOOT_SERIAL: Uart = Uart::new(0x3f8);
 
 /// 打印字节
 #[allow(unused)]
@@ -84,7 +86,6 @@ impl InitIf for InitIfImpl {
         axcpu::init::init_trap();
         axplat_aarch64_peripherals::ns16550a::init_early(phys_to_virt(pa!(UART_PADDR)));
         axplat_aarch64_peripherals::psci::init(PSCI_METHOD);
-        boot_print_str("InitIfImpl::init_early ===================================\r\n");
         axplat_aarch64_peripherals::generic_timer::init_early();
         //#[cfg(feature = "rtc")]
         //axplat_aarch64_peripherals::pl031::init_early(phys_to_virt(pa!(RTC_PADDR)));
@@ -101,9 +102,16 @@ impl InitIf for InitIfImpl {
     /// This function should be called after the kernel has done part of its
     /// initialization (e.g, logging, memory management), and finalized the rest of
     /// platform configuration and initialization.
-    fn init_later(_cpu_id: usize, _dtb: usize) {
+    fn init_later(_cpu_id: usize, dtb: usize) {
         #[cfg(feature = "irq")]
         {
+            use log::info;
+            info!("FDT {:x}", dtb);
+            info!("cpu_id {}",_cpu_id);
+            unsafe {
+                let fdt = LinuxFdt::from_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8).unwrap();
+                info!("fdt {:?}", fdt);
+            }
             axplat_aarch64_peripherals::gic::init_gic(
                 phys_to_virt(pa!(GICD_PADDR)),
                 phys_to_virt(pa!(GICR_PADDR)),

@@ -3,6 +3,9 @@ use axplat::mem::{MemIf, PhysAddr, RawRange, VirtAddr, pa, va};
 use crate::config::devices::MMIO_RANGES;
 use crate::config::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 
+const FDT_MEM_BASE: usize =  0x1_7fe0_0000 ; // 1GB
+const FDT_MEM_SIZE: usize =  0x200000  ; // 2MB
+                                                 //
 struct MemIfImpl;
 
 #[impl_plat_interface]
@@ -23,7 +26,7 @@ impl MemIf for MemIfImpl {
     /// Note that the ranges returned should not include the range where the
     /// kernel is loaded.
     fn reserved_phys_ram_ranges() -> &'static [RawRange] {
-        &[]
+        &[(FDT_MEM_BASE, FDT_MEM_SIZE)]
     }
 
     /// Returns all device memory (MMIO) ranges on the platform.

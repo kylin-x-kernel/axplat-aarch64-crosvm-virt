@@ -13,8 +13,8 @@ package = "axplat-aarch64-crosvm-virt"            # str
 cpu-num = 1                         # uint
 # Base address of the whole physical memory.
 phys-memory-base = 0x8000_0000      # uint
-# Size of the whole physical memory. (4G)
-phys-memory-size = 0x1_0000_0000       # uint
+# Size of the whole physical memory. (2G)
+phys-memory-size = 0x8000_0000       # uint
 # Base physical address of the kernel image.
 kernel-base-paddr = 0x8028_0000     # uint
 # Base virtual address of the kernel image.
@@ -42,8 +42,8 @@ psci-method = "hvc"             # str
 # MMIO ranges with format (`base_paddr`, `size`).
 mmio-ranges = [
     [0x3f8, 0x1000],               # UART
-    [0x3fff_0000, 0x10000],        # GIC Distributor
-    [0x3ffb_0000, 0x20_0000],      # GIC Redistributor
+    [0x3fff_0000, 0x1_0000],        # GIC Distributor
+    [0x3ffd_0000, 0x2_0000],        # GIC Redistributor
 ]                                  # [(uint, uint)]
 
 # Base physical address of the PCIe ECAM space.
@@ -67,4 +67,4 @@ ipi-irq = 1                   # uint
 
 # GIC V3 Addresses
 gicd-paddr = 0x3fff_0000     # uint
-gicr-paddr = 0x3ffb_0000     # uint
+gicr-paddr = 0x3ffd_0000     # uint
