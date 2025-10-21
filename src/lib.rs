@@ -7,6 +7,8 @@ mod boot;
 mod init;
 mod mem;
 mod power;
+mod fdt;
+pub mod psci;
 
 pub mod config {
     //! Platform configuration module.
@@ -25,6 +27,7 @@ pub mod config {
 
 axplat_aarch64_peripherals::ns16550_console_if_impl!(ConsoleIfImpl);
 axplat_aarch64_peripherals::time_if_impl!(TimeIfImpl);
+
 
 #[cfg(feature = "irq")]
 axplat_aarch64_peripherals::irq_if_impl!(IrqIfImpl);

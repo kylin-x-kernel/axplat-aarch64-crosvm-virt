@@ -28,6 +28,8 @@ axplat = "0.2.0"
 axplat-aarch64-peripherals = { version = "0.2.0", default-features = false, features = ["gicv3"] }
 aarch64-cpu = "10.0"
 fdtree_rs = "0.1.0"
+spin = "0.9"
+
 
 [patch.crates-io]
 axplat = { git = "https://github.com/kylin-x-kernel/axplat_crates.git", branch = "crosvm" }

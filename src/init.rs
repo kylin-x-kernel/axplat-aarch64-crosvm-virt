@@ -7,8 +7,6 @@ use axplat::mem::{pa, phys_to_virt};
 
 struct InitIfImpl;
 
-use fdtree_rs::LinuxFdt;
-
 #[unsafe(no_mangle)]
 pub extern "C" fn _boot_print_usize(num: usize) {
     let mut msg: [u8; 16] = [0; 16];
@@ -82,7 +80,8 @@ impl InitIf for InitIfImpl {
     /// This function should be called immediately after the kernel has booted,
     /// and performed earliest platform configuration and initialization (e.g.,
     /// early console, clocking).
-    fn init_early(_cpu_id: usize, _dtb: usize) {
+    fn init_early(_cpu_id: usize, dtb: usize) {
+        crate::mem::init_fdt_paddr(dtb);
         axcpu::init::init_trap();
         axplat_aarch64_peripherals::ns16550a::init_early(phys_to_virt(pa!(UART_PADDR)));
         axplat_aarch64_peripherals::psci::init(PSCI_METHOD);
@@ -103,15 +102,13 @@ impl InitIf for InitIfImpl {
     /// initialization (e.g, logging, memory management), and finalized the rest of
     /// platform configuration and initialization.
     fn init_later(_cpu_id: usize, dtb: usize) {
+        // now we could use logging
+        use log::*;
+        crate::fdt::init_fdt(phys_to_virt(pa!(dtb)));
+
         #[cfg(feature = "irq")]
         {
-            use log::info;
-            info!("FDT {:x}", dtb);
             info!("cpu_id {}",_cpu_id);
-            unsafe {
-                let fdt = LinuxFdt::from_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8).unwrap();
-                info!("fdt {:?}", fdt);
-            }
             axplat_aarch64_peripherals::gic::init_gic(
                 phys_to_virt(pa!(GICD_PADDR)),
                 phys_to_virt(pa!(GICR_PADDR)),

@@ -1,11 +1,21 @@
+use spin::Once;
+
+use core::sync::atomic::{AtomicUsize, Ordering};
 use axplat::mem::{MemIf, PhysAddr, RawRange, VirtAddr, pa, va};
 
 use crate::config::devices::MMIO_RANGES;
 use crate::config::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 
-const FDT_MEM_BASE: usize =  0x1_7fe0_0000 ; // 1GB
-const FDT_MEM_SIZE: usize =  0x200000  ; // 2MB
-                                                 //
+// default FDT memory size 2MB
+const FDT_MEM_SIZE: usize =  0x200000;
+static FDT_MEM_BASE: AtomicUsize = AtomicUsize::new(0);
+
+static FDT_MEM: Once<[RawRange; 1]> = Once::new();
+
+pub fn init_fdt_paddr(paddr: usize) {
+    FDT_MEM_BASE.store(paddr, Ordering::SeqCst);
+}
+
 struct MemIfImpl;
 
 #[impl_plat_interface]
@@ -26,7 +36,7 @@ impl MemIf for MemIfImpl {
     /// Note that the ranges returned should not include the range where the
     /// kernel is loaded.
     fn reserved_phys_ram_ranges() -> &'static [RawRange] {
-        &[(FDT_MEM_BASE, FDT_MEM_SIZE)]
+        FDT_MEM.call_once(|| [(FDT_MEM_BASE.load(Ordering::Relaxed), FDT_MEM_SIZE)]).as_ref()
     }
 
     /// Returns all device memory (MMIO) ranges on the platform.

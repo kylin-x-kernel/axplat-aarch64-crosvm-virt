@@ -12,7 +12,13 @@ static mut BOOT_PT_L0: Aligned4K<[A64PTE; 512]> = Aligned4K::new([A64PTE::empty(
 #[unsafe(link_section = ".data")]
 static mut BOOT_PT_L1: Aligned4K<[A64PTE; 512]> = Aligned4K::new([A64PTE::empty(); 512]);
 
+use crate::init::boot_print_str;
+
 unsafe fn init_boot_page_table() {
+    crate::psci::kvm_guard_granule_init();
+    boot_print_str("[boot] kvm xmap  gicv3\r\n");
+    crate::psci::do_xmap_granules(0x3fff0000, 0x1_0000);
+
     unsafe {
         // 0x0000_0000_0000 ~ 0x0080_0000_0000, table
         BOOT_PT_L0[0] = A64PTE::new_table(pa!(&raw mut BOOT_PT_L1 as usize));
@@ -25,13 +31,20 @@ unsafe fn init_boot_page_table() {
         // 0x0000_4000_0000..0x0000_8000_0000, 1G block, normal memory
         BOOT_PT_L1[1] = A64PTE::new_page(
             pa!(0x4000_0000),
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::DEVICE,
             true,
         );
 
         // 0x0000_8000_0000..0x0000_C000_0000, 1G block, normal memory_set
         BOOT_PT_L1[2] = A64PTE::new_page(
             pa!(0x8000_0000),
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+            true,
+        );
+
+        // 0x0000_C000_0000..0x0001_0000_0000, 1G block, normal memory_set
+        BOOT_PT_L1[3] = A64PTE::new_page(
+            pa!(0xC000_0000),
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
             true,
         );
@@ -91,7 +104,6 @@ unsafe extern "C" fn _start_primary() -> ! {
         adrp    x8, {boot_stack}        // setup boot stack
         add     x8, x8, {boot_stack_size}
         mov     sp, x8
-
 
         bl      {switch_to_el1}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon
