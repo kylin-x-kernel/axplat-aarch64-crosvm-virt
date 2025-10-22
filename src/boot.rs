@@ -15,9 +15,12 @@ static mut BOOT_PT_L1: Aligned4K<[A64PTE; 512]> = Aligned4K::new([A64PTE::empty(
 use crate::init::boot_print_str;
 
 unsafe fn init_boot_page_table() {
-    crate::psci::kvm_guard_granule_init();
-    boot_print_str("[boot] kvm xmap  gicv3\r\n");
-    crate::psci::do_xmap_granules(0x3fff0000, 0x1_0000);
+    #[cfg(feature = "kvm-guest")]
+    {
+        crate::psci::kvm_guard_granule_init();
+        boot_print_str("[boot] kvm xmap  gicv3\r\n");
+        crate::psci::do_xmap_granules(0x3fff0000, 0x1_0000);
+    }
 
     unsafe {
         // 0x0000_0000_0000 ~ 0x0080_0000_0000, table

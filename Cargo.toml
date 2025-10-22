@@ -16,6 +16,7 @@ fp-simd = ["axcpu/fp-simd"]
 irq = ["axplat/irq"]
 smp = ["axplat/smp"]
 rtc = []
+kvm-guest = []
 
 [dependencies]
 log = "0.4"
