@@ -16,7 +16,6 @@ fp-simd = ["axcpu/fp-simd"]
 irq = ["axplat/irq"]
 smp = ["axplat/smp"]
 rtc = []
-kvm-guest = []
 
 [dependencies]
 log = "0.4"
@@ -30,10 +29,12 @@ axplat-aarch64-peripherals = { version = "0.2.0", default-features = false, feat
 aarch64-cpu = "10.0"
 fdtree_rs = "0.1.0"
 spin = "0.9"
-
+lazyinit = "0.2"
+arm-gic =  "0.1.0"
 
 [patch.crates-io]
 axplat = { git = "https://github.com/kylin-x-kernel/axplat_crates.git", branch = "crosvm" }
+arm-gic = { git = "https://github.com/kylin-x-kernel/arm-gic.git", branch = "main" }
 
 [package.metadata.docs.rs]
 targets = ["aarch64-unknown-none"]

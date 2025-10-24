@@ -1,5 +1,6 @@
 use axplat::mem::{Aligned4K, pa};
 use page_table_entry::{GenericPTE, MappingFlags, aarch64::A64PTE};
+use aarch64_cpu::registers::*;
 
 use crate::config::plat::{BOOT_STACK_SIZE, PHYS_VIRT_OFFSET};
 
@@ -12,15 +13,20 @@ static mut BOOT_PT_L0: Aligned4K<[A64PTE; 512]> = Aligned4K::new([A64PTE::empty(
 #[unsafe(link_section = ".data")]
 static mut BOOT_PT_L1: Aligned4K<[A64PTE; 512]> = Aligned4K::new([A64PTE::empty(); 512]);
 
-use crate::init::boot_print_str;
+use crate::serial::{boot_print_str, boot_print_usize};
 
 unsafe fn init_boot_page_table() {
-    #[cfg(feature = "kvm-guest")]
-    {
-        crate::psci::kvm_guard_granule_init();
-        boot_print_str("[boot] kvm xmap  gicv3\r\n");
-        crate::psci::do_xmap_granules(0x3fff0000, 0x1_0000);
-    }
+    boot_print_str("[boot] init boot page table\r\n");
+    crate::psci::kvm_guard_granule_init();
+
+    boot_print_str("[boot] kvm xmap pci cam\r\n");
+    crate::psci::do_xmap_granules(0x7200_0000, 0x100_0000);
+
+    boot_print_str("[boot] kvm xmap pci mem\r\n");
+    crate::psci::do_xmap_granules(0x7000_0000, 0x200_0000);
+
+    boot_print_str("[boot] kvm xmap gicv3 mem\r\n");
+    crate::psci::do_xmap_granules(0x3ffb_0000, 0x20_0000);
 
     unsafe {
         // 0x0000_0000_0000 ~ 0x0080_0000_0000, table
@@ -52,6 +58,12 @@ unsafe fn init_boot_page_table() {
             true,
         );
     }
+
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn kernel_main_test() {
+    boot_print_str("[boot] kernel main entered cpu id\r\n");
 }
 
 unsafe fn enable_fp() {
@@ -72,26 +84,26 @@ unsafe fn enable_fp() {
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.boot")]
 unsafe extern "C" fn _start() -> ! {
-    const FLAG_LE: usize = 0b0;
-    const FLAG_PAGE_SIZE_4K: usize = 0b10;
-    const FLAG_ANY_MEM: usize = 0b1000;
-    // PC = bootloader load address
-    // X0 = dtb
     core::arch::naked_asm!("
-        add     x13, x18, #0x16     // 'MZ' magic
-        b       {entry}             // Branch to kernel start, magic
-
-        .quad   0x280000                   // Image load offset from start of RAM, little-endian
-        .quad   _ekernel - _start   // Effective size of kernel image, little-endian
-        .quad   {flags}             // Kernel flags, little-endian
-        .quad   0                   // reserved
-        .quad   0                   // reserved
-        .quad   0                   // reserved
-        .ascii  \"ARM\\x64\"        // Magic number
-        .long   0                   // reserved (used for PE COFF offset)",
-        flags = const FLAG_LE | FLAG_PAGE_SIZE_4K | FLAG_ANY_MEM,
-        entry = sym _start_primary,
+         bl       {entry}             // Branch to kernel start, magic
+        .space 52, 0
+        .inst 0x644d5241
+        .space 4, 0
+    ",
+    entry = sym _start_primary,
     )
+}
+
+// 根据需要切换至EL1
+unsafe fn switch_to_el1() {
+    let current_sp = aarch64_cpu::registers::SP.get();
+    // 各异常级别使用不同SP
+    SPSel.write(SPSel::SP::ELx);
+    aarch64_cpu::registers::SP.set(current_sp);
+    // 根据需要切换至EL1
+    let current_el = CurrentEL.read(CurrentEL::EL);
+    boot_print_str("[boot] Current el ");
+    boot_print_usize(current_el as _);
 }
 
 /// The earliest entry point for the primary CPU.
@@ -110,6 +122,7 @@ unsafe extern "C" fn _start_primary() -> ! {
 
         bl      {switch_to_el1}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon
+
         bl      {init_boot_page_table}
         adrp    x0, {boot_pt}
         bl      {init_mmu}              // setup MMU
@@ -121,16 +134,17 @@ unsafe extern "C" fn _start_primary() -> ! {
         mov     x1, x20
         ldr     x8, ={entry}
         blr     x8
-        b      .",
-        switch_to_el1 = sym axcpu::init::switch_to_el1,
-        init_mmu = sym axcpu::init::init_mmu,
+        b .
+        ",
+        switch_to_el1 = sym switch_to_el1,
         init_boot_page_table = sym init_boot_page_table,
+        init_mmu = sym axcpu::init::init_mmu,
         enable_fp = sym enable_fp,
         boot_pt = sym BOOT_PT_L0,
-        boot_stack = sym BOOT_STACK,
-        boot_stack_size = const BOOT_STACK_SIZE,
         phys_virt_offset = const PHYS_VIRT_OFFSET,
         entry = sym axplat::call_main,
+        boot_stack = sym BOOT_STACK,
+        boot_stack_size = const BOOT_STACK_SIZE,
     )
 }
 

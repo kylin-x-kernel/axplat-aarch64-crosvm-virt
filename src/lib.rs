@@ -8,6 +8,8 @@ mod init;
 mod mem;
 mod power;
 mod fdt;
+mod serial;
+mod gicv3;
 pub mod psci;
 
 pub mod config {

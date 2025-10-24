@@ -1,7 +1,6 @@
 use spin::Once;
-use log::*;
 
-use crate::init::{boot_print_str, _boot_print_usize as boot_print_usize};
+use crate::serial::{boot_print_str, boot_print_usize};
 
 /// kvm guard granule
 pub static GUARD_GRANULE: Once<usize> = Once::new();
