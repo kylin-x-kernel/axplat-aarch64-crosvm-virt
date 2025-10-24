@@ -50,7 +50,7 @@ mmio-ranges = [
 # Base physical address of the PCIe ECAM space.
 pci-ecam-base = 0x7200_0000  # uint
 # End PCI bus number (`bus-range` property in device tree).
-pci-bus-end = 0xff              # uint
+pci-bus-end = 0x00              # uint
 # PCI device memory ranges (`ranges` property in device tree).
 pci-ranges = [
     #[0x3ef_f0000, 0x1_0000],            # PIO space
