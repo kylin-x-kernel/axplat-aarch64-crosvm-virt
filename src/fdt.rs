@@ -13,6 +13,7 @@ pub(crate) fn init_fdt(fdt_paddr: VirtAddr) {
     FDT.call_once(|| fdt);
 }
 
+#[allow(dead_code)]
 pub(crate) fn interrupt_controller() -> Option<InterruptController<'static, 'static>> {
     let fdt = FDT.get().expect("FDT is not initialized");
     match fdt.interrupt_controller() {

@@ -7,7 +7,7 @@ use crate::config::devices::MMIO_RANGES;
 use crate::config::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 
 // default FDT memory size 2MB
-const FDT_MEM_SIZE: usize =  0x200000;
+const FDT_MEM_SIZE: usize =  0x20_0000;
 static FDT_MEM_BASE: AtomicUsize = AtomicUsize::new(0);
 
 static FDT_MEM: Once<[RawRange; 1]> = Once::new();

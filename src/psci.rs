@@ -1,9 +1,19 @@
 use spin::Once;
 
+use axplat::psci::PsciIf;
 use crate::serial::{boot_print_str, boot_print_usize};
 
 /// kvm guard granule
 pub static GUARD_GRANULE: Once<usize> = Once::new();
+
+const ARM_SMCCC_VENDOR_HYP_KVM_MEM_UNSHARE_FUNC_ID: u32 =
+    ((1) << 31) | ((1) << 30) | (((6) & 0x3F) << 24) | ((4) & 0xFFFF);
+
+const ARM_SMCCC_VENDOR_HYP_KVM_MMIO_GUARD_INFO_FUNC_ID: u32 =
+    ((1) << 31) | ((1) << 30) | (((6) & 0x3F) << 24) | ((5) & 0xFFFF);
+
+const ARM_SMCCC_VENDOR_HYP_KVM_MEM_SHARE_FUNC_ID: u32 =
+    ((1) << 31) | ((1) << 30) | (((6) & 0x3F) << 24) | ((3) & 0xFFFF);
 
 pub fn psci_hvc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> (usize, usize) {
     let ret0;
@@ -22,9 +32,7 @@ pub fn psci_hvc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> (usize
 
 /// 获取KVM的内存保护粒度
 pub fn kvm_guard_granule_init() {
-    // ARM_SMCCC_VENDOR_HYP_KVM_MMIO_GUARD_INFO_FUNC_ID
-    let func: u32 = ((1) << 31) | ((1) << 30) | (((6) & 0x3F) << 24) | ((5) & 0xFFFF);
-    let (guard_granule, guard_has_range) = psci_hvc_call(func, 0, 0, 0);
+    let (guard_granule, guard_has_range) = psci_hvc_call(ARM_SMCCC_VENDOR_HYP_KVM_MMIO_GUARD_INFO_FUNC_ID, 0, 0, 0);
     assert_eq!(guard_has_range, 0x1);
     GUARD_GRANULE.call_once(|| guard_granule);
     boot_print_str("KVM MMIO guard granule: ");
@@ -82,4 +90,49 @@ pub fn do_xmap_granules(phys_addr: usize, size: usize) {
     let nr_granules = size / { GUARD_GRANULE.get().unwrap()};
     let ret = __do_xmap_granules(phys_addr, nr_granules, true);
     assert_eq!(ret, nr_granules);
+}
+
+
+struct PsciImpl;
+
+#[impl_plat_interface]
+impl PsciIf for PsciImpl {
+
+    fn unshare_dma_buffer(paddr: usize, size: usize) {
+        let page_size = 0x1000;
+        let pages = size / page_size;
+        for i in 0..pages {
+            let (ret0, _ret1) = psci_hvc_call(
+                ARM_SMCCC_VENDOR_HYP_KVM_MEM_UNSHARE_FUNC_ID,
+                paddr +  page_size * i,
+                1,
+                0,
+            );
+            if ret0 != 0 {
+                log::warn!(
+                    "[virtio hal impl] cannot unshare 0x{:x}",
+                    paddr + page_size * i
+                );
+            }
+        }
+    }
+
+    fn share_dma_buffer(paddr: usize, size: usize) {
+        let page_size = 0x1000;
+        let pages = size / page_size;
+        for i in 0..pages {
+            let (ret0, _ret1) = psci_hvc_call(
+                ARM_SMCCC_VENDOR_HYP_KVM_MEM_SHARE_FUNC_ID,
+                paddr + page_size * i,
+                1,
+                0,
+            );
+            if ret0 != 0 {
+                log::warn!(
+                    "[virtio hal impl] cannot share 0x{:x}",
+                    paddr + page_size * i
+                );
+            }
+        }
+    }
 }

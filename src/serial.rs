@@ -35,6 +35,7 @@ pub fn boot_print_str(data: &str) {
 }
 
 /// 打印整形
+#[allow(dead_code)]
 pub fn boot_print_usize(num: usize) {
     _boot_print_usize(num);
 }
@@ -64,6 +65,8 @@ impl Uart {
 
 static BOOT_SERIAL: Uart = Uart::new(0x3f8);
 
+#[allow(dead_code)]
+/// 打印EL1寄存器
 pub fn print_el1_reg(switch: bool) {
     if !switch {
         return;

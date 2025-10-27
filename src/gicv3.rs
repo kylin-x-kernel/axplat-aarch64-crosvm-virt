@@ -1,24 +1,9 @@
 //! ARM Generic Interrupt Controller (GIC).
-use arm_gic::gicv3::{GicV3, IntId};
+use arm_gic::gicv3::GicV3;
 use log::*;
 
 use axplat::mem::VirtAddr;
-use kspin::SpinNoIrq;
-use lazyinit::LazyInit;
 use aarch64_cpu::registers::*;
-
-/// The maximum number of IRQs.
-const MAX_IRQ_COUNT: usize = 1024;
-
-#[inline]
-fn get_current_cpu_id() -> usize {
-    let mpidr_el1: usize;
-    unsafe {
-        core::arch::asm!("mrs {}, MPIDR_EL1", out(reg) mpidr_el1);
-    }
-    mpidr_el1 & 0xff // 获取 Aff0 字段，即 CPU ID
-}
-
 
 /// Initializes GIC
 pub fn init_gic(gicd_base: VirtAddr, gicr_base: VirtAddr) {
