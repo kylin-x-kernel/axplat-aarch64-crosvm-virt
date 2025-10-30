@@ -1,19 +1,35 @@
+use fdtree_rs::LinuxFdt;
 use spin::Once;
 
-use core::sync::atomic::{AtomicUsize, Ordering};
 use axplat::mem::{MemIf, PhysAddr, RawRange, VirtAddr, pa, va};
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::config::devices::MMIO_RANGES;
 use crate::config::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 
 // default FDT memory size 2MB
-const FDT_MEM_SIZE: usize =  0x20_0000;
+const FDT_MEM_SIZE: usize = 0x20_0000;
 static FDT_MEM_BASE: AtomicUsize = AtomicUsize::new(0);
+static FDT_MEM: Once<[RawRange; 2]> = Once::new();
 
-static FDT_MEM: Once<[RawRange; 1]> = Once::new();
+static DICE_MEM_BASE: AtomicUsize = AtomicUsize::new(0);
+static DICE_MEM_SIZE: AtomicUsize = AtomicUsize::new(0);
 
-pub fn init_fdt_paddr(paddr: usize) {
-    FDT_MEM_BASE.store(paddr, Ordering::SeqCst);
+/// Initializes the reserved memory physical address.
+pub(crate) fn init_early(fdt_paddr: usize) {
+    FDT_MEM_BASE.store(fdt_paddr, Ordering::SeqCst);
+    let fdt = unsafe {
+        LinuxFdt::from_ptr(fdt_paddr as *const u8).expect("Failed to parse FDT")
+    };
+
+    fdt.dice().map(|dice_node| {
+        let dice = dice_node;
+        for reg in dice.regions().expect("DICE regions") {
+            DICE_MEM_BASE.store(reg.starting_address as usize, Ordering::SeqCst);
+            DICE_MEM_SIZE.store(reg.size as usize, Ordering::SeqCst);
+            break;
+        }
+    });
 }
 
 struct MemIfImpl;
@@ -36,7 +52,17 @@ impl MemIf for MemIfImpl {
     /// Note that the ranges returned should not include the range where the
     /// kernel is loaded.
     fn reserved_phys_ram_ranges() -> &'static [RawRange] {
-        FDT_MEM.call_once(|| [(FDT_MEM_BASE.load(Ordering::Relaxed), FDT_MEM_SIZE)]).as_ref()
+        FDT_MEM
+            .call_once(|| {
+                [
+                    (FDT_MEM_BASE.load(Ordering::Relaxed), FDT_MEM_SIZE),
+                    (
+                        DICE_MEM_BASE.load(Ordering::Relaxed),
+                        DICE_MEM_SIZE.load(Ordering::Relaxed),
+                    ),
+                ]
+            })
+            .as_ref()
     }
 
     /// Returns all device memory (MMIO) ranges on the platform.

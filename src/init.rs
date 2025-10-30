@@ -19,7 +19,7 @@ impl InitIf for InitIfImpl {
     /// early console, clocking).
     fn init_early(_cpu_id: usize, dtb: usize) {
         boot_print_str("[boot] platform init early\r\n");
-        crate::mem::init_fdt_paddr(dtb);
+        crate::mem::init_early(dtb);
         axcpu::init::init_trap();
         axplat_aarch64_peripherals::ns16550a::init_early(phys_to_virt(pa!(UART_PADDR)));
         axplat_aarch64_peripherals::psci::init(PSCI_METHOD);
