@@ -52,12 +52,9 @@ impl InitIf for InitIfImpl {
                 phys_to_virt(pa!(GICD_PADDR)),
                 phys_to_virt(pa!(GICR_PADDR)),
             );
-
-            axplat_aarch64_peripherals::gic::init_gic(
-                phys_to_virt(pa!(GICD_PADDR)),
-                phys_to_virt(pa!(GICR_PADDR)),
-            );
-            axplat_aarch64_peripherals::gic::init_gicr();
+            // crosvm set uart as edge trigger irq
+            info!("set UART IRQ {} as edge trigger", UART_IRQ);
+            crate::gicv3::set_trigger(UART_IRQ, true);
             axplat_aarch64_peripherals::generic_timer::enable_irqs(TIMER_IRQ);
         }
     }
@@ -67,7 +64,10 @@ impl InitIf for InitIfImpl {
     fn init_later_secondary(_cpu_id: usize) {
         #[cfg(feature = "irq")]
         {
-            axplat_aarch64_peripherals::gic::init_gicr();
+            crate::gicv3::init_gic(
+                phys_to_virt(pa!(GICD_PADDR)),
+                phys_to_virt(pa!(GICR_PADDR)),
+            );
             axplat_aarch64_peripherals::generic_timer::enable_irqs(TIMER_IRQ);
         }
     }

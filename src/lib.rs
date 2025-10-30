@@ -32,4 +32,4 @@ axplat_aarch64_peripherals::time_if_impl!(TimeIfImpl);
 
 
 #[cfg(feature = "irq")]
-axplat_aarch64_peripherals::irq_if_impl!(IrqIfImpl);
+irq_if_impl!(IrqIfImpl);
