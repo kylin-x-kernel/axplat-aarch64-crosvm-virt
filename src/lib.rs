@@ -7,7 +7,7 @@ mod boot;
 mod init;
 mod mem;
 mod power;
-mod fdt;
+pub mod fdt;
 mod serial;
 mod gicv3;
 pub mod psci;
