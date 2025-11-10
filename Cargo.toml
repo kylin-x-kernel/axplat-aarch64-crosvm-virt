@@ -6,8 +6,11 @@ documentation = "https://docs.rs/axplat-aarch64-crosvm-virt"
 keywords = ["arceos", "os", "hal", "embedded", "aarch64"]
 categories = ["embedded", "no-std", "hardware-support", "os"]
 edition = "2024"
-authors = ["WeiKang Guo <guoweikang.kernel@gmail.com"]
-license = "GPL-3.0-or-later OR Apache-2.0 OR MulanPSL-2.0"
+authors = [
+    "WeiKang Guo <guoweikang.kernel@gmail.com",
+    "KylinSoft Co., Ltd. <https://www.kylinos.cn/>"
+    ]
+license = "Apache-2.0"
 homepage = "https://github.com/kylin-x-kernel/axplat-aarch64-crosvm-virt.git"
 repository = "https://github.com/kylin-x-kernel/axplat-aarch64-crosvm-virt.git"
 
