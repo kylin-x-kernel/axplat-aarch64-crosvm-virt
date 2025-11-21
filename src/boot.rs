@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (C) 2025 WeiKang Guo <guoweikang.kernel@gmail.com
+// Copyright (C) 2025 KylinSoft Co., Ltd. <https://www.kylinos.cn/>
+// See LICENSE for license details.
+
 use axplat::mem::{Aligned4K, pa};
 use page_table_entry::{GenericPTE, MappingFlags, aarch64::A64PTE};
 use aarch64_cpu::registers::*;
