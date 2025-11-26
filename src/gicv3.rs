@@ -325,6 +325,36 @@ macro_rules! irq_if_impl {
             fn send_ipi(irq_num: usize, target: axplat::irq::IpiTarget) {
                 $crate::gicv3::send_ipi(irq_num, target);
             }
+
+            fn set_priority(_irq: usize, _priority: u8) {
+                // GICv3 does not support setting priority per IRQ in this implementation.
+                // Priority management can be handled via ICC_PMR_EL1 if needed.
+                unimplemented!();
+            }
+
+            fn set_priority_mask(_priority: u8) {
+                // GICv3 does not support setting priority mask in this implementation.
+                // Priority management can be handled via ICC_PMR_EL1 if needed.
+                unimplemented!();
+            }
+
+            fn pmu_init(_threshold: u64) {
+                // GICv3 does not have specific PMU initialization in this implementation.
+                // PMU setup should be handled separately if required.
+                unimplemented!();
+            }
+
+            fn clear_pmu_overflows() {
+                // GICv3 does not have specific PMU overflow handling in this implementation.
+                // PMU overflow management should be handled separately if required.
+                unimplemented!();
+            }
+
+            fn reset_pmu_event_counter(_threshold: u64) {
+                // GICv3 does not have specific PMU event counter reset in this implementation.
+                // PMU event counter management should be handled separately if required.
+                unimplemented!();
+            }
         }
     };
 }
