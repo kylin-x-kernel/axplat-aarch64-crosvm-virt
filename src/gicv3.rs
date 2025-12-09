@@ -271,7 +271,7 @@ fn debug_irq_32() {
     }
 }
 
-pub fn handle_irq(_unused: usize) {
+pub fn handle_irq(_unused: usize) -> Option<usize> {
     let irq = get_and_acknowledge_interrupt();
 
     if !IRQ_HANDLER_TABLE.handle(irq as u32 as _) {
@@ -281,6 +281,8 @@ pub fn handle_irq(_unused: usize) {
     if irq <= 1019 {
         end_of_interrupt(irq);
     }
+
+    Some(irq)
 }
 
 /// Default implementation of [`axplat::irq::IrqIf`] using the GIC.
@@ -317,7 +319,7 @@ macro_rules! irq_if_impl {
             /// It is called by the common interrupt handler. It should look up in the
             /// IRQ handler table and calls the corresponding handler. If necessary, it
             /// also acknowledges the interrupt controller after handling.
-            fn handle(irq: usize) {
+            fn handle(irq: usize) -> Option<usize> {
                 $crate::gicv3::handle_irq(irq)
             }
 
