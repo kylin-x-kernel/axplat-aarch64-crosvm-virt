@@ -275,7 +275,7 @@ pub fn handle_irq(_unused: usize) -> Option<usize> {
     let irq = get_and_acknowledge_interrupt();
 
     if !IRQ_HANDLER_TABLE.handle(irq as u32 as _) {
-        warn!("Unhandled IRQ {:?}", irq);
+        debug!("Unhandled IRQ {:?}", irq);
     }
 
     if irq <= 1019 {
