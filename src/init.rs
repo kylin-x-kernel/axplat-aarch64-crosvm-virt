@@ -7,7 +7,7 @@ use log::*;
 
 use axplat::init::InitIf;
 #[allow(unused_imports)]
-use crate::config::devices::{GICR_PADDR, GICD_PADDR, TIMER_IRQ, UART_IRQ, UART_PADDR};
+use crate::config::devices::{GICR_PADDR, GICD_PADDR, TIMER_IRQ, UART_IRQ, UART_PADDR, RTC_PADDR};
 use crate::config::plat::PSCI_METHOD;
 use axplat::mem::{pa, phys_to_virt};
 
@@ -29,8 +29,8 @@ impl InitIf for InitIfImpl {
         axplat_aarch64_peripherals::ns16550a::init_early(phys_to_virt(pa!(UART_PADDR)));
         axplat_aarch64_peripherals::psci::init(PSCI_METHOD);
         axplat_aarch64_peripherals::generic_timer::init_early();
-        //#[cfg(feature = "rtc")]
-        //axplat_aarch64_peripherals::pl031::init_early(phys_to_virt(pa!(RTC_PADDR)));
+        #[cfg(feature = "rtc")]
+        axplat_aarch64_peripherals::pl031::init_early(phys_to_virt(pa!(RTC_PADDR)));
     }
 
     /// Initializes the platform at the early stage for secondary cores.

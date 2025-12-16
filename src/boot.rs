@@ -33,6 +33,8 @@ unsafe fn init_boot_page_table() {
     boot_print_str("[boot] kvm xmap gicv3 mem\r\n");
     crate::psci::do_xmap_granules(0x3ffb_0000, 0x20_0000);
 
+    boot_print_str("[boot] kvm xmap rtc\r\n");
+    crate::psci::do_xmap_granules(0x2000, 0x1000);
     unsafe {
         // 0x0000_0000_0000 ~ 0x0080_0000_0000, table
         BOOT_PT_L0[0] = A64PTE::new_table(pa!(&raw mut BOOT_PT_L1 as usize));
