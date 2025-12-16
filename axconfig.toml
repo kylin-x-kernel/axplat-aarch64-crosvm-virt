@@ -42,6 +42,7 @@ psci-method = "hvc"             # str
 # MMIO ranges with format (`base_paddr`, `size`).
 mmio-ranges = [
     [0x3f8, 0x1000],               # UART
+    [0x2000, 0x1000],      # PL030 RTC
     [0x3ffb_0000, 0x20_0000],      # GICV3 MMIO
     [0x7000_0000, 0x200_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     [0x7200_0000, 0x100_0000],    # PCIe ECAM space
@@ -69,3 +70,6 @@ ipi-irq = 1                   # uint
 # GIC V3 Addresses
 gicd-paddr = 0x3fff_0000     # uint
 gicr-paddr = 0x3ffb_0000     # uint
+
+# RTC (PL030) Address
+rtc-paddr = 0x2000          # uint
