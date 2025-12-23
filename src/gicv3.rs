@@ -285,6 +285,46 @@ pub fn handle_irq(_unused: usize) -> Option<usize> {
     Some(irq)
 }
 
+/// Allows the current CPU to respond to interrupts.
+///
+/// In AArch64, it unmasks IRQs by clearing the I bit in the `DAIF` register.
+#[inline]
+pub fn enable_irqs() {
+    // Default implementation: via DAIF register
+    unsafe { asm!("msr daifclr, #2") };
+}
+
+/// Makes the current CPU ignore interrupts.
+///
+/// In AArch64, it masks IRQs by setting the I bit in the `DAIF` register.
+#[inline]
+pub fn disable_irqs() {
+    // Default implementation: via DAIF register
+    unsafe { asm!("msr daifset, #2") };
+}
+
+/// Returns whether the current CPU is allowed to respond to interrupts.
+///
+/// In AArch64, it checks the I bit in the `DAIF` register.
+#[inline]
+pub fn irqs_enabled() -> bool {
+    !DAIF.matches_all(DAIF::I::Masked)
+}
+
+#[inline]
+pub fn local_irq_save_and_disable() -> usize {
+    let flags: usize;
+    // save `DAIF` flags
+    unsafe { asm!("mrs {}, daif", out(reg) flags) };
+    disable_irqs();
+    flags
+}
+
+#[inline]
+pub fn local_irq_restore(flags: usize) {
+    unsafe { asm!("msr daif, {}", in(reg) flags) };
+}
+
 /// Default implementation of [`axplat::irq::IrqIf`] using the GIC.
 #[macro_export]
 macro_rules! irq_if_impl {
@@ -326,6 +366,37 @@ macro_rules! irq_if_impl {
             /// Sends an inter-processor interrupt (IPI) to the specified target CPU or all CPUs.
             fn send_ipi(irq_num: usize, target: axplat::irq::IpiTarget) {
                 $crate::gicv3::send_ipi(irq_num, target);
+            }
+
+            /// Sets the priority for a specific interrupt request (IRQ).
+            /// Not used in crsovm
+            fn set_priority(irq: usize, priority: u8) {
+                todo!()
+            }
+
+            /// Save irq status and disable
+            fn local_irq_save_and_disable() -> usize {
+                $crate::gicv3::local_irq_save_and_disable()
+            }
+
+            /// Restore irq status
+            fn local_irq_restore(flag: usize) {
+                $crate::gicv3::local_irq_restore(flag);
+            }
+
+            /// Allows the current CPU to respond to interrupts.
+            fn enable_irqs(){
+                $crate::gicv3::enable_irqs();
+            }
+
+            /// Makes the current CPU ignore interrupts.
+            fn disable_irqs(){
+                $crate::gicv3::disable_irqs();
+            }
+
+            /// Returns whether the current CPU is allowed to respond to interrupts.
+            fn irqs_enabled() -> bool {
+                $crate::gicv3::irqs_enabled()
             }
         }
     };
