@@ -8,6 +8,7 @@ use arm_gic::gicv3::*;
 use core::sync::atomic::{AtomicBool, Ordering};
 use kspin::SpinNoIrq;
 use log::*;
+use core::arch::asm;
 
 use crate::config::plat::CPU_NUM;
 use axplat::irq::{HandlerTable, IrqHandler};
