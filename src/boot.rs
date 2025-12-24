@@ -115,7 +115,6 @@ unsafe fn switch_to_el1() {
 
 /// The earliest entry point for the primary CPU.
 #[unsafe(naked)]
-#[unsafe(link_section = ".text.boot")]
 unsafe extern "C" fn _start_primary() -> ! {
     // X0 = dtb
     core::arch::naked_asm!("
@@ -158,7 +157,6 @@ unsafe extern "C" fn _start_primary() -> ! {
 /// The earliest entry point for the secondary CPUs.
 #[cfg(feature = "smp")]
 #[unsafe(naked)]
-#[unsafe(link_section = ".text.boot")]
 pub(crate) unsafe extern "C" fn _start_secondary() -> ! {
     // X0 = stack pointer
     core::arch::naked_asm!("
