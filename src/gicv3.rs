@@ -371,7 +371,7 @@ macro_rules! irq_if_impl {
 
             /// Sets the priority for a specific interrupt request (IRQ).
             /// Not used in crsovm
-            fn set_priority(irq: usize, priority: u8) {
+            fn set_priority(_irq: usize, _priority: u8) {
                 todo!()
             }
 
