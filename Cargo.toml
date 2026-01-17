@@ -31,7 +31,7 @@ axplat = { version = "0.3.0", git = "https://github.com/kylin-x-kernel/axplat_cr
 axplat-aarch64-peripherals = { version="0.3", default-features = false, features = ["gicv3"], git = "https://github.com/kylin-x-kernel/axplat_crates.git", branch="dev"}
 aarch64-cpu = "10.0"
 fdtree_rs = "0.1.0"
-spin = "0.9"
+spin = "0.10"
 lazyinit = "0.2"
 arm-gic =  "0.1.0"
 
